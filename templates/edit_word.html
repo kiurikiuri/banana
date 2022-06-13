@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% include "header.html" %}
+{% include "alerts.html" %}
+{% block content %}
+<div class="container">
+  <h1>EDIT WORD</h1>
+  <form method="post" class="needs-validation" novalidate>
+    <div class="mb-3 input-group">
+      <!-- <label for="word" class="form-label">word Name</label> -->
+      <span class="input-group-text" id="word-label">word</span>
+      <input type="text" class="form-control" id="word" name="word" aria-describedby="wordlHelp" value="{{ word.word }}" required>
+      <div class="invalid-feedback">
+        Please select a valid state.
+      </div>
+    </div>
+    <div class="mb-3 input-group">
+      <!-- <label for="discription" class="form-label">discription Name</label> -->
+      <span class="input-group-text" id="discription-label">discription</span>
+      <input type="text" class="form-control" id="discription" name="discription" aria-describedby="discriptionlHelp" value="{{ word.discription }}" required>
+      <div class="invalid-feedback">
+        Please select a valid state.
+      </div>
+    </div>
+    <div class="input-group mb-3">
+      <label class="input-group-text" for="kind-select">Kind</label>
+      <select class="form-select" id="kind-select" name="kind_id" required>
+        {% for li in kindList %}
+          {% if li.id == word.kind_id %}
+            <option value="{{ li.id }}" selected>{{ li.kind }}</option>
+          {% else %}
+            <option value="{{ li.id }}">{{ li.kind }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <div class="invalid-feedback">
+        Please select a valid state.
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary" id="submit">Submit</button>
+  </form>
+</div>
+{% include "formvalidate.html" %}
+{% endblock %}
+
+

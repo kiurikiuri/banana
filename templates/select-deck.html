@@ -1,0 +1,18 @@
+
+{% extends "layout.html" %}
+{% block content %}
+<h1>{{ title }}</h1>
+{% for deck in decks %}
+<div class="col mb-2">
+  <a href="#" class="list-group-item list-group-item-action card h-100">
+    <div class="card-body">
+      <h5 class="card-title">{{ deck[1] }}</h5>
+    </div>
+    <div class="card-footer">
+      <small class="text-muted">{{ deck[2].strftime('%Y-%m-%d') }}</small>
+    </div>
+  </a>
+</div>
+{% endfor %}
+
+{% endblock %}

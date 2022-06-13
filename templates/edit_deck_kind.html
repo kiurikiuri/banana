@@ -1,0 +1,22 @@
+
+{% extends "layout.html" %}
+{% include "header.html" %}
+{% include "alerts.html" %}
+{% block content %}
+<div class="container">
+  <h1>EDIT DECK KIND</h1>
+  <form method="post"  class="needs-validation" novalidate>
+    <div class="input-group mb-3">
+      <span class="input-group-text" id="deck-kind-label">Deck Kind</span>
+      <input type="text" class="form-control" id="deckKind" aria-describedby="basic-addon3" name="deckKind" aria-describedby="deckKindlHelp" value="{{ deckKind.deck_kind }}" required>
+      <div class="invalid-feedback">
+        Please select a valid state.
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary" id="submit">Submit</button>
+  </form>
+</div>
+{% include "formvalidate.html" %}
+{% endblock %}
+
+

@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% include "header.html" %}
+{% include "alerts.html" %}
+{% block content %}
+<div class="container">
+  <h1>STUDY CONFIG</h1>
+  <form method="post"  class="needs-validation" novalidate>
+    <div class="input-group mb-3">
+      <select class="form-select" id="study-select" name="study_kind">
+        <option selected value="" disabled>study...</option>
+        {% for li in studyKindList %}
+          <option value="{{ li.id }}">{{ li.study_kind }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary" id="submit">Submit</button>
+  </form>
+</div>
+{% include "formvalidate.html" %}
+{% endblock %}
+

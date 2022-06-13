@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% include "header.html" %}
+{% block content %}
+<div class="container">
+  <h1>STUDY WORD LIST</h1>
+  <form method="post" id="form"> 
+    <!-- <div class="row"> -->
+    <!--   <div class="col-8"> -->
+    <!--     <div class="input-group mb-3"> -->
+    <!--       <input type="text" class="form-control" aria-label="Recipient's username" aria-describedby="button-addon2" placeholder="search word" name="searchword" /> -->
+    <!--       <select class="form-select" id="kind-select" name="kind_id"> -->
+    <!--         <option selected value="" disabled>Kind...</option> -->
+    <!--         {% for li in kindList %} -->
+    <!--           <option value="{{ li.id }}">{{ li.kind }}</option> -->
+    <!--         {% endfor %} -->
+    <!--       </select> -->
+    <!--       <button class="btn btn-outline-secondary" type="submit" id="button-addon2">SEARCH</button> -->
+    <!--     </div> -->
+    <!--   </div> -->
+    <!--   <div class="col-4"> -->
+    <!--     <div class="btn btn-danger" id="delete_trg_btn">DELETE</div> -->
+    <!--     <div class="btn btn-secondary" id="cansel" style="display: none;">CANSEL</div> -->
+    <!--   </div> -->
+    <!--  -->
+    <!-- </div> -->
+    <a type="button" class="btn btn-primary" href="/add-word-to-deck/{{ deckInfoList[0]['deck_id'] }}">Add Word</a>
+    <ol class="list-group list-group-numbered">
+      {% for li in deckInfoList %}
+      <li class="list-group-item d-flex justify-content-between align-items-start">
+        <p class="fw-bold">{{ li.word }}</p>
+        <p>next: {{ li.next_date }}</p>
+        <p>answer: {{ li.ans_num }}</p>
+        <p>correct: {{ li.c_num }}</p>
+        <p>incorrect: {{ li.ic_num }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  </form>
+</div>
+{% endblock %}
+
+
+

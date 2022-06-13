@@ -1,0 +1,550 @@
+import os
+from flask import Flask
+from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
+from flask import render_template, request, redirect
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+import json
+import pytz
+
+
+
+# ----------------------------------------
+# DB CONFIG
+# ----------------------------------------
+DB_USER = 'sqlsys'
+DB_PASS = 'syssql'
+HOST = 'localhost'
+DB_NAME = 'wordwork'
+ 
+
+# ----------------------------------------
+# Flask settings
+# ----------------------------------------
+app = Flask(__name__)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://{user}:{password}@{host}/{db_name}?charset=utf8'.format(**{
+      'user': DB_USER,
+      'password': DB_PASS,
+      'host': HOST,
+      'db_name': DB_NAME
+  })
+app.config['SECRET_KEY'] = os.urandom(24)
+db = SQLAlchemy(app)
+ 
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+
+# ----------------------------------------
+# create table class
+# ----------------------------------------
+#class BlogArticle(db.Model):
+#    id = db.Column(db.Integer, primary_key=True)
+#    title = db.Column(db.String(50), nullable=False)
+#    body = db.Column(db.String(500), nullable=False)
+#    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+class Words(db.Model):
+   id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+   user_id = db.Column(db.Integer, primary_key=True)
+   kind_id = db.Column(db.Integer, primary_key=True)
+   word = db.Column(db.String(500), nullable=False)
+   discription = db.Column(db.String(1024), nullable=False)
+   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+   created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+class Decks(db.Model):
+   id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+   user_id = db.Column(db.Integer, primary_key=True)
+   deck_kind_id = db.Column(db.Integer, primary_key=True)
+   deck = db.Column(db.String(255), nullable=False)
+   shared_flg = db.Column(db.SmallInteger, default=0)
+   appear_flg = db.Column(db.SmallInteger, default=1)
+   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+   created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+class Kind(db.Model):
+   id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+   user_id = db.Column(db.Integer, primary_key=True)
+   kind = db.Column(db.String(255), nullable=False)
+   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+   created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+class Dwsts(db.Model):
+   id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+   user_id = db.Column(db.Integer, primary_key=True)
+   deck_id = db.Column(db.Integer, primary_key=True)
+   word_id = db.Column(db.Integer, primary_key=True)
+   last_date = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+   check_list = db.Column(db.SmallInteger, default=0)
+   c_num = db.Column(db.Integer, default=0)
+   ic_num = db.Column(db.Integer, default=0)
+   ans_num = db.Column(db.Integer, default=0)
+   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+   created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+class Wdindk(db.Model):
+   id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+   user_id = db.Column(db.Integer, primary_key=True)
+   deck_id = db.Column(db.Integer, primary_key=True)
+   word_id = db.Column(db.Integer, primary_key=True)
+   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+   created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+class Dkkind(db.Model):
+   id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+   user_id = db.Column(db.Integer, primary_key=True)
+   deck_kind = db.Column(db.String(255), nullable=False)
+   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+   created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(pytz.timezone('Asia/Tokyo')))
+ 
+
+# ----------------------------------------
+# create user table class
+# ----------------------------------------
+class User(UserMixin, db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	username = db.Column(db.String(50), nullable=False, unique=True)
+	password = db.Column(db.String(256))
+
+# ----------------------------------------
+# login manager settings
+# ----------------------------------------
+@login_manager.unauthorized_handler
+def unauthorized():
+    return redirect('/login')
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+# ----------------------------------------
+# signup user
+# ----------------------------------------
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == "POST":
+        username = request.form.get('username')
+        password = request.form.get('password')
+        # Userのインスタンスを作成
+        user = User(username=username, password=generate_password_hash(password, method='sha256'))
+        db.session.add(user)
+        db.session.commit()
+        return redirect('/login')
+    else:
+        return render_template('signup.html')
+
+# ----------------------------------------
+# login
+# ----------------------------------------
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == "POST":
+        username = request.form.get('username')
+        password = request.form.get('password')
+        # Userテーブルからusernameに一致するユーザを取得
+        user = User.query.filter_by(username=username).first()
+        if check_password_hash(user.password, password):
+            login_user(user)
+            return redirect('/')
+        return redirect('/login')
+    else:
+        return render_template('login.html')
+
+# ----------------------------------------
+# logout 
+# ----------------------------------------
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect('/login')
+
+
+# ----------------------------------------
+# utility
+# ----------------------------------------
+# ----------------------------------------
+# check
+# ----------------------------------------
+# check word exists
+def isWordExists(user_id, kind_id, word):
+    isWord = db.session.query(Words).filter(Words.word == word).filter(Words.kind_id == kind_id).filter(Words.user_id == user_id).first()
+    return isWord
+# check word kind exists
+def isKindExists(user_id, kind):
+    isKind = db.session.query(Kind).filter(Kind.kind == kind).filter(Kind.user_id == user_id).first()
+    return isKind
+# check deck kind exists
+def isDeckKindExists(user_id, deck_kind):
+    isDkkind = db.session.query(Dkkind).filter(Dkkind.deck_kind == deck_kind).filter(Dkkind.user_id == user_id).first()
+    return isDkkind
+# ----------------------------------------
+# select all at user
+# ----------------------------------------
+def selectAtUserKind(user_id):
+    rec = db.session.query(Kind).filter(Kind.user_id == user_id).all()
+    return rec
+def selectAtUserWords(user_id):
+    rec = db.session.query(Words).filter(Words.user_id == user_id).all()
+    return rec
+def selectAtUserDeckKind(user_id):
+    rec = db.session.query(Dkkind).filter(Dkkind.user_id == user_id).all()
+    return rec
+
+
+# ----------------------------------------
+# select partial search at user
+# ----------------------------------------
+def selectPtAtUserWords(user_id, s):
+    rec = db.session.query(Words).filter(Words.user_id == user_id).filter(Words.word.like("%{}%".format(s))).all()
+    return rec
+
+# ----------------------------------------
+# dynamic sql struction
+# ----------------------------------------
+def dynamicSqlStcWordAtUser(user_id):
+    sql = db.session.query(Words).filter(Words.user_id == user_id)
+    return sql
+
+
+# ----------------------------------------
+# get at key ,user
+# ----------------------------------------
+def getKind(id, user_id):
+    rec = db.session.query(Kind).filter(Kind.id == id).filter(Kind.user_id == user_id).first()
+    return rec
+def getWords(id, user_id, kind_id):
+    rec = db.session.query(Words).filter(Words.id == id).filter(Words.user_id == user_id).filter(Words.kind_id == kind_id).first()
+    return rec
+def getDeckKind(id, user_id):
+    rec = db.session.query(Dkkind).filter(Dkkind.id == id).filter(Dkkind.user_id == user_id).first()
+    return rec
+
+# ----------------------------------------
+# get none key
+# ----------------------------------------
+def getWordKind(user_id, word, kind_id):
+    rec = db.session.query(Words).filter(Words.user_id == user_id).filter(Words.kind_id == kind_id).filter(Words.word == word).all()
+    return rec
+# =========================================
+# delete
+# =========================================
+# ----------------------------------------
+# delete keys
+# ----------------------------------------
+def deleteWordsAtKeys(user_id, word_id, kind_id):
+    print(user_id)
+    print(word_id)
+    print(kind_id)
+    words = db.session.query(Words).filter(Words.user_id == user_id).filter(Words.kind_id == kind_id).filter(Words.id == word_id).first()
+    print(words)
+    db.session.delete(words)
+    db.session.commit()
+    return 1
+
+# ----------------------------------------
+# delete keys object
+# ----------------------------------------
+def deleteWordsAtKeysObjct(keysObj):
+    print(keysObj)
+    ret = deleteWordsAtKeys(keysObj['user_id'], keysObj['id'], keysObj['kind_id'])
+    return ret
+
+# ----------------------------------------
+# delete keys object list
+# ----------------------------------------
+def deleteWordsAtKeysObjctList(keysObjList):
+    print(keysObjList)
+    for o in keysObjList:
+        deleteWordsAtKeysObjct(o)
+    return 1
+
+# ----------------------------------------
+# root page route
+# ----------------------------------------
+@app.route('/', methods=['GET'])
+@login_required
+def index():
+    print(current_user.id)
+    return render_template('index.html' )
+
+@app.route('/load-csv')
+@login_required
+def load_csv():
+   return render_template('load_csv.html' )
+
+# ----------------------------------------
+# select data template
+# ----------------------------------------
+# @app.route('/', methods=['GET'])
+# @login_required
+#def blog():
+#    if request.method == 'GET':
+#        # DBに登録されたデータをすべて取得する
+#        blogarticles = BlogArticle.query.all()
+#    return render_template('index.html', blogarticles=blogarticles)
+@app.route('/kind-list', methods=['GET'])
+@login_required
+def kind_list():
+   if request.method == 'GET':
+       # DBに登録されたデータをすべて取得する
+       kindList = selectAtUserKind(current_user.id)
+   return render_template('kind_list.html', kindList=kindList)
+
+@app.route('/deck-kind-list', methods=['GET'])
+@login_required
+def deck_kind_list():
+   if request.method == 'GET':
+       # DBに登録されたデータをすべて取得する
+       deckKindList = selectAtUserDeckKind(current_user.id)
+       print(deckKindList)
+       for li in deckKindList:
+           print(li.id)
+           print(li.deck_kind)
+   return render_template('deck_kind_list.html', deckKindList=deckKindList)
+
+@app.route('/word-list', methods=['GET', 'POST'])
+@login_required
+def word_list():
+   kindList = selectAtUserKind(current_user.id)
+   if request.method == 'GET':
+       # DBに登録されたデータをすべて取得する
+       wordList = selectAtUserWords(current_user.id)
+   elif request.method == 'POST':
+       if not request.form.get('deleteItems') == "":
+           arr = request.form.get('deleteItems').split(',')
+           condition = []
+           for el in arr:
+               s = el.split('_')
+               condition.append({"id": s[0], "kind_id": s[1], "user_id": current_user.id})
+           ret = deleteWordsAtKeysObjctList(condition)
+           print(condition) 
+       else:
+           sql = dynamicSqlStcWordAtUser(current_user.id)
+           if not request.form.get('searchword') is None:
+                sql = sql.filter(Words.word.like("%{}%".format(request.form.get('searchword'))))
+           if not request.form.get('kind_id') is None:
+                sql = sql.filter(Words.kind_id == request.form.get('kind_id'))
+           wordList = sql.all()
+           # wordList = db.session.query(Words).filter(Wordf.user_id == current_user.id).filter(Words.word.like("%{}%".format(request.form.get('searchword')))).all()
+   return render_template('word_list.html', wordList=wordList, kindList=kindList)
+
+# ----------------------------------------
+# update data template
+# ----------------------------------------
+# @app.route('/update/<int:id>', methods=['GET', 'POST'])
+# @login_required
+# def update(id):
+#     # 引数idに一致するデータを取得する
+#     blogarticle = BlogArticle.query.get(id)
+#     if request.method == "GET":
+#         return render_template('update.html', blogarticle=blogarticle)
+#     else:
+#         # 上でインスタンス化したblogarticleのプロパティを更新する
+#         blogarticle.title = request.form.get('title')
+#         blogarticle.body = request.form.get('body')
+#         # 更新する場合は、add()は不要でcommit()だけでよい
+#         db.session.commit()
+#         return redirect('/') 
+@app.route('/edit-kind/update/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_kind_update(id):
+    # 引数id ログイン中ユーザIDに一致するデータを取得する
+    kind = getKind(id, current_user.id)
+    if request.method == "GET":
+        msg="initialize"
+        return render_template('edit_kind.html', kind=kind, msg=msg) 
+    else:
+        # 入力されたkindをチェック
+        isKind = isKindExists(current_user.id, request.form.get('kind'))
+        if isKind is None:
+            # 上でインスタンス化したkindのプロパティを更新する
+            kind.kind = request.form.get('kind')
+            # 更新する場合は、add()は不要でcommit()だけでよい
+            msg="更新に成功しました。[kind={}]".format(kind.kind)
+            db.session.commit()
+            return render_template('edit_kind.html', kind=kind, msg=msg) 
+        else:
+            msg="更新に失敗しました。すでに登録されているワード種別です。[kind={}]".format(kind.kind)
+            return render_template('edit_kind.html', kind=kind, msg=msg) 
+
+@app.route('/edit-deck-kind/update/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_deck_kind_update(id):
+    # 引数id ログイン中ユーザIDに一致するデータを取得する
+    deckKind = getDeckKind(id, current_user.id)
+    if request.method == "GET":
+        msg="initialize"
+        print(deckKind)
+        return render_template('edit_deck_kind.html', deckKind=deckKind, msg=msg) 
+    else:
+        # 入力されたdeckKindをチェック
+        isDeckKind = isDeckKindExists(current_user.id, request.form.get('deckKind'))
+        if isDeckKind is None:
+            # 上でインスタンス化したkindのプロパティを更新する
+            deckKind.deck_kind = request.form.get('deckKind')
+            # 更新する場合は、add()は不要でcommit()だけでよい
+            msg="更新に成功しました。[deckKind={}]".format(deckKind.deck_kind)
+            db.session.commit()
+            return render_template('edit_deck_kind.html', deckKind=deckKind, msg=msg) 
+        else:
+            msg="更新に失敗しました。すでに登録されているデック種別です。[deckKind={}]".format(deckKind.deck_kind)
+            return render_template('edit_deck_kind.html', deckKind=deckKind, msg=msg) 
+
+
+@app.route('/edit-word/update/<int:id>/<int:kid>', methods=['GET', 'POST'])
+@login_required
+def edit_word_update(id,kid):
+    # 引数idに一致するデータを取得する
+    #word = db.session.query(Words).filter(Words.id == id).filter(Words.kind_id == kid).first()
+    word = getWords(id, current_user.id, kid)
+    kindList = selectAtUserKind(current_user.id)
+    if request.method == "GET":
+        msg="initialize"
+        return render_template('edit_word.html', msg=msg, word=word, kindList=kindList)
+    else:
+        print(1)
+        print(word.word)
+        isWord = isWordExists(current_user.id, request.form.get('kind_id'), request.form.get('word'))
+        if not isWord is None:
+            if word.word != request.form.get('word'):
+                print(2)
+                msg="更新に失敗しました。すでに登録されているワードです。[word={}]".format(word.word)
+                return render_template('edit_word.html', msg=msg, word=word, kindList=kindList)
+            elif word.kind_id != request.form.get('kind_id'):
+                isWordKind = getWordKind(current_user.id, word.word, request.form.get('kind_id'))
+                print(isKindExists)
+                if not isWordKind is None:
+                    msg="更新に失敗しました。すでに登録されているワードです。[word={}]".format(word.word)
+                    return render_template('edit_word.html', msg=msg, word=word, kindList=kindList)
+                    
+        # 上でインスタンス化したwordのプロパティを更新する
+        print(3)
+        print(word.word)
+        word.word = request.form.get('word')
+        word.discription = request.form.get('discription')
+        word.kind_id = request.form.get('kind_id')
+        # 更新する場合は、add()は不要でcommit()だけでよい
+        db.session.commit()
+        msg="更新に成功しました。[word={}]".format(word.word)
+        return redirect('/word-list')
+
+# ----------------------------------------
+# delete data template
+# ----------------------------------------
+# @app.route('/delete/<int:id>', methods=['GET'])
+# @login_required
+# def delete(id):
+#     # 引数idに一致するデータを取得する
+#     blogarticle = BlogArticle.query.get(id)
+#     db.session.delete(blogarticle)
+#     db.session.commit()
+#     return redirect('/')
+@app.route('/delete-words', methods=['POST'])
+@login_required
+def delete():
+    jsondata =  request.get_json()
+    print(jsondata)
+    for li in jsondata:
+        print(li)
+    #json_dict = json.loads(jsondata)
+    # for li in json_dict.keys():
+    #     print(li)
+    # 引数idに一致するデータを取得する
+    return redirect('/')
+
+# ----------------------------------------
+# create data template
+# ----------------------------------------
+# @app.route('/create', methods=['GET', 'POST'])
+# @login_required
+# def create():
+#     if request.method == "POST":
+#         title = request.form.get('title')
+#         body = request.form.get('body')
+#         # BlogArticleのインスタンスを作成
+#         blogarticle = BlogArticle(title=title, body=body)
+#         db.session.add(blogarticle)
+#         db.session.commit()
+#         return redirect('/')
+#     else:
+#         return render_template('create.html')
+@app.route('/create-kind', methods=['GET', 'POST'])
+@login_required
+def create_kind():
+    if request.method == "POST":
+        kind = request.form.get('kind')
+        msg=""
+        # kindのインスタンスを作成
+        if isKindExists(current_user.id, kind) is None:
+            newkind = Kind(kind=kind, user_id=current_user.id)
+            db.session.add(newkind)
+            db.session.commit()
+            msg="登録に成功しました。[kind={}]".format(kind)
+            return render_template('create_kind.html', msg=msg)
+        else:
+            msg="登録に失敗しました。次のワード種別はすでに登録されています。[kind={}]".format(kind)
+            return render_template('create_kind.html', msg=msg)
+    else:
+        msg="initialize"
+        return render_template('create_kind.html', msg=msg)
+
+@app.route('/create-word', methods=['GET', 'POST'])
+@login_required
+def create_word():
+    kindList = selectAtUserKind(current_user.id)
+    if request.method == "POST":
+        word = request.form.get('word')
+        disc = request.form.get('discription')
+        kind_id = request.form.get('kind_id')
+        isWord = isWordExists(current_user.id, kind_id, word)
+        if not isWord is None:
+            msg="The word is already exists.[word='{}']".format(word)
+            return render_template('create_word.html', msg=msg, kindList=kindList)
+        # kindのインスタンスを作成
+        newWord = Words(word=word, discription=disc, kind_id=kind_id, user_id=current_user.id)
+        db.session.add(newWord)
+        db.session.commit()
+        return render_template('create_word.html', msg="word is created.", kindList=kindList)
+    else:
+        return render_template('create_word.html', msg="initialize", kindList=kindList)
+
+@app.route('/create-deck-kind', methods=['GET', 'POST'])
+@login_required
+def create_deck_kind():
+    if request.method == "POST":
+        deck_kind = request.form.get('deck_kind')
+        isDeckKind = isDeckKindExists(current_user.id, deck_kind)
+        if not isDeckKind is None:
+            msg="The Deck kind is already exists.[deck_kind='{}']".format(deck_kind)
+            return render_template('create_deck_kind.html', msg=msg)
+        # kindのインスタンスを作成
+        newDeckKind = Dkkind(user_id=current_user.id, deck_kind=deck_kind)
+        db.session.add(newDeckKind)
+        db.session.commit()
+        return render_template('create_deck_kind.html', msg="deck kind is created.")
+    else:
+        return render_template('create_deck_kind.html', msg="initialize")
+
+@app.route('/create-deck', methods=['GET', 'POST'])
+@login_required
+def create_deck():
+    # DBに登録されたデータをすべて取得する
+    kindList = selectAtUserKind(current_user.id)
+    wordList = selectAtUserWords(current_user.id)
+    if request.method == "POST":
+       if request.form.get('actionflg') == "add":
+           word = request.form.get('word')
+           disc = request.form.get('discription')
+           kind_id = request.form.get('kind_id')
+           isWord = isDeckExists(current_user.id, kind_id, word)
+           if not isWord is None:
+               msg="The word is already exists.[word='{}']".format(word)
+               return render_template('create_word.html', msg=msg, kindList=kindList)
+           # Wordsのインスタンスを作成
+           newWord = Words(word=word, discription=disc, kind_id=kind_id, user_id=current_user.id)
+           db.session.add(newWord)
+           db.session.commit()
+           return render_template('create_deck.html', msg="word is created.", kindList=kindList)
+       else:
+           wordList = selectPtAtUserWords(current_user.id, request.form.get('searchword'))
+           return render_template('create_deck.html', msg="word is created.", wordList=wordList, kindList=kindList)
+    else:
+        return render_template('create_deck.html', msg="initialize", wordList=wordList, kindList=kindList)
+

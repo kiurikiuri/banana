@@ -1,0 +1,16 @@
+<!--
+<div class="alert alert-success" role="alert">
+<h4 class="alert-heading">Well done!</h4>
+<p>Aww yeah, you successfully read this important alert message. This example text is going to run a bit longer so that you can see how spacing within an alert works with this kind of content.</p>
+<hr>
+<p class="mb-0">Whenever you need to, be sure to use margin utilities to keep things nice and tidy.</p>
+</div>
+-->
+<!-- <div class="alertbar_tmp alert alert-success alert-dismissible fade show" role="alert" style="position: fixed;top:0; left:0; right:0;z-index:999;display: none;"> -->
+{% if not msg == "initialize" %}
+<div class="alertbar_tmp alert alert-success alert-dismissible fade show" role="alert" style="position: fixed;top:0; left:0; right:0;z-index:999;">
+  <strong></strong>
+  <p>{{msg}}</p>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}

@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% include "header.html" %}
+{% block content %}
+<div class="container">
+  <h1>LOAD CSV</h1>
+  <form method="post">
+    <div class="mb-3">
+      <label for="word" class="form-label">New Word</label>
+      <input type="text" class="form-control" id="word" name="word" aria-describedby="wordlHelp">
+      <div id="wordHelp" class="form-text">please new word</div>
+    </div>
+    <div class="mb-3">
+      <label for="discription" class="form-label">discription</label>
+      <input type="discription" class="form-control" id="discription" name="discription">
+    </div>
+    <div class="mb-3">
+      <label for="csv_file" class="form-label">CSV UPLOAD</label>
+      <input type="file" id="csv_file" class="form-control" placeholder="File upload" name="csvfile" onchange="csvread(this)" multiple/>
+    </div>
+    <button type="submit" class="btn btn-primary" id="submit">Submit</button>
+  </form>
+</div>
+{% endblock %}

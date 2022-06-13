@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% include "header.html" %}
+{% include "alerts.html" %}
+{% block content %}
+<div class="container">
+  <h1>Create word</h1>
+  <form method="post"  class="needs-validation" novalidate>
+    <div class="input-group mb-3">
+      <span class="input-group-text" id="word-label">Word</span>
+      <input type="text" class="form-control" id="word" aria-describedby="basic-addon3" name="word" aria-describedby="wordlHelp" required>
+      <div class="invalid-feedback">
+        Please select a valid state.
+      </div>
+    </div>
+    <div class="input-group mb-3">
+      <span class="input-group-text" id="discription-label">Discription</span>
+      <input type="text" class="form-control" id="discription" aria-describedby="basic-addon3" name="discription" aria-describedby="discriptionlHelp" required>
+      <div class="invalid-feedback">
+        Please select a valid state.
+      </div>
+    </div>
+    <div class="input-group mb-3">
+      <label class="input-group-text" for="kind-select">Kind</label>
+      <select class="form-select" id="kind-select" name="kind_id" required>
+        <option selected value="" disabled>Choose...</option>
+        {% for li in kindList %}
+        <option value="{{ li.id }}">{{ li.kind }}</option>
+        {% endfor %}
+      </select>
+      <div class="invalid-feedback">
+        Please select a valid state.
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+</div>
+{% include "formvalidate.html" %}
+{% endblock %}
+

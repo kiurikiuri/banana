@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+{% include "header.html" %}
+{% block content %}
+<div class="container">
+  <form method="post" id="form">
+    <input type="hidden" name="actionflg" id="actionflg" name=""/>
+    <input type="hidden" name="study_id" id="study_id" value="{{ deckInfo['study_id'] }}" />
+    <input type="hidden" name="dwsts_id" id="dwsts_id" value="{{ deckInfo['dwsts_id'] }}" />
+    <input type="hidden" name="deck_id" id="deck_id" value="{{ deckInfo['deck_id'] }}" />
+    <input type="hidden" name="words_id" id="words_id" value="{{ deckInfo['words_id'] }}" />
+    <input type="hidden" name="study_kind_id" id="study_kind_id" value="{{ deckInfo['study_kind_id'] }}" />
+    <input type="hidden" name="study_forget_id" id="study_forget_id" value="{{ deckInfo['study_forget_id'] }}" />
+    {% if deckInfo == None %}
+    <p> 現在対象の単語はありません</p>
+    {% else %}
+    <div class="card">
+      <div class="card-header">
+        <span>{{ deckInfo['word'] }}</span>
+      </div>
+      <div class="grid card-body">
+        <p class="last-date text-end">
+          {{ deckInfo['last_date'] }}
+        </p>
+        <p class="after-answer d-none card-text" id="correct-answer">{{ deckInfo['discription'] }}</p>
+        <div class="after-answer d-none">
+          <div class="row">
+            <div class="col-3">
+              <div class="btn-group">
+                <button id="correct-btn" type="submit" class="btn btn-primary">正解</button>
+                <button id="incorrect-btn" type="submit" class="btn btn-danger">不正解</button>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="btn-group">
+                {% if deckInfo['check_list'] == 1 %}
+                  <input id="chkComp1" type="radio" name="chkComprehension" value="1" class="btn-check" checked>
+                {% else %}
+                  <input id="chkComp1" type="radio" name="chkComprehension" value="1" class="btn-check">
+                {% endif %}
+                  <label class="btn btn-secondary" for="chkComp1">1</label>
+
+                {% if deckInfo['check_list'] == 2 %}
+                  <input id="chkComp2" type="radio" name="chkComprehension" value="2" class="btn-check" checked>
+                {% else %}
+                  <input id="chkComp2" type="radio" name="chkComprehension" value="2" class="btn-check">
+                {% endif %}
+                  <label class="btn btn-secondary" for="chkComp2">2</label>
+
+                {% if deckInfo['check_list'] == 3 %}
+                  <input id="chkComp3" type="radio" name="chkComprehension" value="3" class="btn-check" checked>
+                {% else %}
+                  <input id="chkComp3" type="radio" name="chkComprehension" value="3" class="btn-check">
+                {% endif %}
+                  <label class="btn btn-secondary" for="chkComp3">3</label>
+
+                {% if deckInfo['check_list'] == 4 %}
+                  <input id="chkComp4" type="radio" name="chkComprehension" value="4" class="btn-check" checked>
+                {% else %}
+                  <input id="chkComp4" type="radio" name="chkComprehension" value="4" class="btn-check">
+                {% endif %}
+                  <label class="btn btn-secondary" for="chkComp4">4</label>
+
+                {% if deckInfo['check_list'] == 5 %}
+                  <input id="chkComp5" type="radio" name="chkComprehension" value="5" class="btn-check"  checked />
+                {% else %}
+                  <input id="chkComp5" type="radio" name="chkComprehension" value="5" class="btn-check"/>
+                {% endif %}
+                  <label class="btn btn-secondary" for="chkComp5">5</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <button id="btn-answer" type="button" class="btn btn-outline-dark"><i class="bi bi-arrow-down-right"></i></button>
+      </div>
+    </div>
+    {% endif %}
+  </form>
+</div>
+
+
+{% include "study_js.html" %}
+{% endblock %}
+
+
