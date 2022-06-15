@@ -24,8 +24,8 @@
     <!--  -->
     <!-- </div> -->
     <a type="button" class="btn btn-primary" href="/add-word-to-deck/{{ deckInfoList[0]['deck_id'] }}">Add Word</a>
-      {% for li in deckInfoList %}
         <div class="row">
+      {% for li in deckInfoList %}
           <div class="col-sm-6">
             <div class="card">
               <div class="card-body">
@@ -39,8 +39,8 @@
               </div>
             </div>
           </div>
-        </div>
       {% endfor %}
+        </div>
     {# <ol class="list-group list-group-numbered"> #}
     {#   {% for li in deckInfoList %} #}
     {#   <li class="list-group-item d-flex justify-content-between align-items-start"> #}
