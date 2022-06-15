@@ -223,18 +223,18 @@ def load_user(user_id):
 # ----------------------------------------
 # signup user
 # ----------------------------------------
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == "POST":
-        username = request.form.get('username')
-        password = request.form.get('password')
-        # Userのインスタンスを作成
-        user = User(username=username, password=generate_password_hash(password, method='sha256'))
-        db.session.add(user)
-        db.session.commit()
-        return redirect('/login')
-    else:
-        return render_template('signup.html')
+# @app.route('/signup', methods=['GET', 'POST'])
+# def signup():
+#     if request.method == "POST":
+#         username = request.form.get('username')
+#         password = request.form.get('password')
+#         # Userのインスタンスを作成
+#         user = User(username=username, password=generate_password_hash(password, method='sha256'))
+#         db.session.add(user)
+#         db.session.commit()
+#         return redirect('/login')
+#     else:
+#         return render_template('signup.html')
 
 # ----------------------------------------
 # login
