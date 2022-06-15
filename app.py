@@ -44,6 +44,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://{user}:{password}@{host
       'db_name': DB_NAME
   })
 app.config['SECRET_KEY'] = os.urandom(24)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedalta(minutes=10)
 db = SQLAlchemy(app)
  
 login_manager = LoginManager()
