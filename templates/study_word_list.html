@@ -27,11 +27,21 @@
     <ol class="list-group list-group-numbered">
       {% for li in deckInfoList %}
       <li class="list-group-item d-flex justify-content-between align-items-start">
-        <p class="fw-bold">{{ li.word }}</p>
-        <p>next: {{ li.next_date }}</p>
-        <p>answer: {{ li.ans_num }}</p>
-        <p>correct: {{ li.c_num }}</p>
-        <p>incorrect: {{ li.ic_num }}</p>
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">{{ li.word }}</h5>
+                <p class="card-text">next: {{ li.next_date }}</p>
+                <p>next: {{ li.next_date }}</p>
+                <p>answer: {{ li.ans_num }}</p>
+                <p>correct: {{ li.c_num }}</p>
+                <p>incorrect: {{ li.ic_num }}</p>
+                {# <a href="#" class="btn btn-primary">Go somewhere</a> #}
+              </div>
+            </div>
+          </div>
+        </div>
       </li>
       {% endfor %}
     </ol>
