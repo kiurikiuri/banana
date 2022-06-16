@@ -17,6 +17,7 @@ import pytz
 # DB_PASS = 'syssql'
 # HOST = 'localhost'
 # DB_NAME = 'wordwork'
+
 DB_USER = 'yztiv86wjd2ywejs'
 DB_PASS = 'kigf4i6rxo4ijapl'
 HOST = 'qz8si2yulh3i7gl3.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306'
@@ -419,10 +420,13 @@ def addWord(word, discription, kind_id):
         db.session.add(newWord)
         db.session.commit()
         msg="word is created.[word='{}']".format(word)
-        rtn = { 'msg': msg, 'result': SUCCESS, 'code': 1, 'rec': newWord}
+        print(msg)
+        rslt = { 'msg': msg, 'result': SUCCESS, 'code': 1, 'rec': newWord }
     else:
         msg="The word is already exists.[word='{}']".format(word)
-        rtn = { 'msg': msg, 'result': FAILER, 'code': 0, 'rec': None}
+        print(msg)
+        rslt = { 'msg': msg, 'result': FAILER, 'code': 0, 'rec': None}
+    rtn = { 'addWord': rslt }
     return rtn
 def addDeck(deck, deck_kind_id):
     try:
@@ -432,14 +436,19 @@ def addDeck(deck, deck_kind_id):
             db.session.add(newDeck)
             db.session.commit()
             msg="新しいデックの作成に成功しました。[deck={}]".format(deck)
-            rtn = { 'msg': msg, 'result': SUCCESS, 'code': 1}
+            print(msg)
+            rslt = { 'msg': msg, 'result': SUCCESS, 'code': 1}
         else:
             msg="すでに登録されているデック名とデック種別の組み合わせです。[deck={}]".format(deck)
-            rtn = { 'msg': msg, 'result': FAILER, 'code': 0}
+            print(msg)
+            rslt = { 'msg': msg, 'result': FAILER, 'code': 0}
+        rtn = { 'addDeck': rslt }
         return rtn
     except:
         msg="DBアクセスエラー。[deck={}]".format(deck)
-        rtn = { 'msg': msg, 'result': FAILER, 'code': -1}
+        print(msg)
+        rslt = { 'msg': msg, 'result': FAILER, 'code': -1}
+        rtn = { 'addDeck': rslt }
         return rtn
 def addWordInDeck(deckRecord, wordIdList):
     try:
@@ -454,10 +463,14 @@ def addWordInDeck(deckRecord, wordIdList):
             db.session.add(newDwsts)
         db.session.commit()
         msg="デックにワードを追加しました。[deck={}]".format(deckRecord.deck)
-        rtn = { 'msg': msg, 'result': SUCCESS, 'code': 1}
+        print(msg)
+        rslt = { 'msg': msg, 'result': SUCCESS, 'code': 1}
+        rtn = { 'addWordInDeck': rslt }
+
         return rtn
     except:
         msg="DBアクセスエラー。[deck={}]".format(deckRecord.deck)
+        print(msg)
         rtn = { 'msg': msg, 'result': FAILER, 'code': -1}
         return rtn
 def createStudy(deck_id):
@@ -821,13 +834,13 @@ def create_deck():
             deck_kind_id = request.form.get('deck_kind_id')
             deck = request.form.get('deckname')
             createDeckResult = addDeck(deck, deck_kind_id)
-            if createDeckResult['result'] == 1:
+            if createDeckResult['addDeck']['result'] == 1:
                 newDeck = db.session.query(Decks).filter(Decks.user_id==current_user.id, Decks.deck_kind_id==deck_kind_id, Decks.deck==deck).first()
                 addWordInDeckResult = addWordInDeck(newDeck, wordIdList)
                 createStudy(newDeck.id)
-                msg=addWordInDeckResult['msg']
+                msg=addWordInDeckResult['addWordInDeck']['msg']
             else:
-                msg=createDeckResult['msg']
+                msg=createDeckResult['addDeck']['msg']
         else:
             sql = dynamicSqlStcWordAtUser(current_user.id)
             if not request.form.get('searchword') is None:
@@ -844,27 +857,48 @@ def addWordToDeck(deck_id, word, discription, kind_id):
         print(word)
         print(discription)
         print(kind_id)
-        rtn =[]
-        rslt = addWord(word, discription, kind_id)
-        rtn.append(rslt)
+        rtn = {}
+        print(1111)
+        addWordRslt = addWord(word, discription, kind_id)
+        print(1113)
         deckRecord = Decks.query.get(deck_id)
-        if rtn[0]['result'] == FAILER:
+        print(1111)
+        print(addWordRslt['addWord'])
+        print(addWordRslt['addWord']['result'])
+        if addWordRslt['addWord']['result'] == FAILER:
             print('add exist word to deck')
             newWord = Words.query.filter(Words.user_id == current_user.id).filter(Words.word == word).filter(Words.kind_id == kind_id).first()
-            rtn[0]['rec'] = newWord
+            addWordRslt['addWord']['rec'] = newWord
         else:
             print('add new word to deck')
-            newWord = rtn[0]['rec']
+            newWord = addWordRslt['addWord']['rec']
         print(newWord)
+        rtn['calls'] = addWordRslt
         # デックに新規追加ワードが登録されているか確認する
         if Wdindk.query.filter(Wdindk.deck_id == deck_id).filter(Wdindk.word_id == newWord.id).first() == None:
-            print("デックに新しく単語を追加[word_id={}]".format(word_id))
-            rslt = addWordInDeck(deckRecord, [newWord.id])
-            rtn.append(rslt)
+            print("aaafdasfa")
+            addWordInDeckRslt = addWordInDeck(deckRecord, [newWord.id])
+            print("1aaafdasfa")
+            rtn['addWordInDeck'] = addWordInDeckRslt
+            print("2aaafdasfa")
+            msg="デックに新しく単語を追加[word_id={}]".format(newWord.id)
+            print(2)
+            print(msg)
+            rslt = { 'msg': msg, 'result': SUCCESS, 'code': 1}
+        else:
+            msg="デックにこの単語は登録されているので何も登録しない[word_id={}]".format(newWord.id)
+            print(1)
+            print(msg)
+            rslt = { 'msg': msg, 'result': SUCCESS, 'code': 2}
+        rtn['addWordToDeck'] = rslt
+        for rs in rtn:
+            print(rs)
         return rtn
-    except:
+    except Exception as e:
+        print(e)
         msg="DBアクセスエラー。"
         rtn = { 'msg': msg, 'result': FAILER, 'code': -1}
+        print(msg)
         return rtn
 @app.route('/add-word-to-deck/<int:deck_id>/<int:word_id>', methods=['GET', 'POST'])
 @login_required
@@ -875,14 +909,16 @@ def add_word_to_deck(deck_id, word_id):
    word = Words.query.get(word_id)
    kind = Kind.query.get(word.kind_id)
    msg='initialize'
+   rtn = {}
    if request.method == 'POST':
        deck_id = deck_id
        word = request.form.get('word')
        discription = request.form.get('discription')
        kind_id = request.form.get('kind_id')
-       rtn = addWordToDeck(deck_id, word, discription, kind_id)
-       print(rtn[0]['rec'])
-       addStudy(deck_id, rtn[0]['rec'].id)
+       addWordToDeckRslt = addWordToDeck(deck_id, word, discription, kind_id)
+       rtn['addWordToDeckRslt'] = addWordToDeckRslt
+       if addWordToDeckRslt['addWordToDeck']['code'] == 1:
+           addStudy(deck_id, addWordToDeckRslt['calls']['addWord']['rec'].id)
         
    return render_template('add_word_to_deck.html', msg=msg, deck=deck, deckKind=deckKind, kind=kind)
 @app.route('/study-config/<int:id>', methods=['GET', 'POST'])
