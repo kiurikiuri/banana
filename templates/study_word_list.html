@@ -23,14 +23,13 @@
     <!--   </div> -->
     <!--  -->
     <!-- </div> -->
-    <a type="button" class="btn btn-primary" href="/add-word-to-deck/{{ deckInfoList[0]['deck_id'] }}">Add Word</a>
+    <a type="button" class="btn btn-primary" href="/add-word-to-deck/{{ deckInfoList[0]['deck_id'] }}/{{ deckInfoList[0]['word_id'] }}">Add Word</a>
         <div class="row">
       {% for li in deckInfoList %}
           <div class="col-sm-6">
             <div class="card">
               <div class="card-body">
                 <h5 class="card-title">{{ li.word }}</h5>
-                <p class="card-text">next: {{ li.next_date }}</p>
                 <p>next: {{ li.next_date }}</p>
                 <p>answer: {{ li.ans_num }}</p>
                 <p>correct: {{ li.c_num }}</p>
@@ -54,7 +53,7 @@
     {#             <p>answer: {{ li.ans_num }}</p> #}
     {#             <p>correct: {{ li.c_num }}</p> #}
     {#             <p>incorrect: {{ li.ic_num }}</p> #}
-    {#             {# <a href="#" class="btn btn-primary">Go somewhere</a> #} #}
+    {#             {# <a href="#" class="btn btn-primary">Go somewhere</a> #} 
     {#           </div> #}
     {#         </div> #}
     {#       </div> #}
@@ -64,7 +63,7 @@
     {# </ol> #}
   </form>
 </div>
-{% endblock %}
+{% endblock %} 
 
 
 

@@ -4,6 +4,7 @@
 {% block content %}
 <div class="container">
   <h1>add word to deck</h1>
+  <a class="btn btn-primary" href="/study-list/{{ deck.id }}">BACK TO STUDY WORDS</a>
   <form method="post"  class="needs-validation" novalidate>
     <div class="input-group mb-3">
       <span class="input-group-text" id="word-label">Word</span>
@@ -22,7 +23,7 @@
     <div class="input-group mb-3">
       <label class="input-group-text" for="kind-select">Kind</label>
       <select class="form-select" id="kind-select" name="kind_id">
-        <option value="{{ deckKind.id }}">{{ deckKind.deck_kind }}</option>
+        <option value="{{ kind.id }}">{{ kind.kind }}</option>
       </select>
       <div class="invalid-feedback">
         Please select a valid state.

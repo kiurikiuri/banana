@@ -66,6 +66,7 @@ SQL_STUDY_FORGET_INFO = ' \
         d.c_num as c_num,   \
         d.ic_num as ic_num,   \
         d.check_list as check_list, \
+        e.id as word_id,   \
         e.word as word,   \
         e.discription as discription, \
         g.id as study_forget_id,       \
@@ -452,7 +453,7 @@ def addWordInDeck(deckRecord, wordIdList):
             newDwsts = Dwsts(user_id=current_user.id, deck_id=deckRecord.id, word_id=int(li))
             db.session.add(newDwsts)
         db.session.commit()
-        msg="新しいデックの作成に成功しました。[deck={}]".format(deckRecord.deck)
+        msg="デックにワードを追加しました。[deck={}]".format(deckRecord.deck)
         rtn = { 'msg': msg, 'result': SUCCESS, 'code': 1}
         return rtn
     except:
@@ -846,11 +847,18 @@ def addWordToDeck(deck_id, word, discription, kind_id):
         rtn =[]
         rslt = addWord(word, discription, kind_id)
         rtn.append(rslt)
-        newWord = rtn[0]['rec']
+        if rtn[0]['result'] == FAILER:
+            print('add exist word to deck')
+            newWord = Words.query.filter(Words.user_id == current_user.id).filter(Words.word == word).filter(Words.kind_id == kind_id).first()
+            rtn[0]['rec'] = newWord
+        else:
+            print('add new word to deck')
+            newWord = rtn[0]['rec']
         print(newWord)
         deckRecord = Decks.query.get(deck_id)
-        rslt = addWordInDeck(deckRecord, [newWord.id])
-        rtn.append(rslt)
+        if Wdindk.query.filter(Wdindk.deck_id == deck_id).filter(Wdindk.word_id == newWord.id).first() == None:
+            rslt = addWordInDeck(deckRecord, [newWord.id])
+            rtn.append(rslt)
         print(rtn)
         for li in rtn:
             print(li)
@@ -859,15 +867,17 @@ def addWordToDeck(deck_id, word, discription, kind_id):
         msg="DBアクセスエラー。"
         rtn = { 'msg': msg, 'result': FAILER, 'code': -1}
         return rtn
-@app.route('/add-word-to-deck/<int:id>', methods=['GET', 'POST'])
+@app.route('/add-word-to-deck/<int:deck_id>/<int:word_id>', methods=['GET', 'POST'])
 @login_required
-def add_word_to_deck(id):
+def add_word_to_deck(deck_id, word_id):
    # DBに登録されたデータをすべて取得する
-   deck = Decks.query.get(id)
+   deck = Decks.query.get(deck_id)
    deckKind = Dkkind.query.filter(Dkkind.id == deck.deck_kind_id).first()
+   word = Words.query.get(word_id)
+   kind = Kind.query.get(word.kind_id)
    msg='initialize'
    if request.method == 'POST':
-       deck_id = id
+       deck_id = deck_id
        word = request.form.get('word')
        discription = request.form.get('discription')
        kind_id = request.form.get('kind_id')
@@ -875,7 +885,7 @@ def add_word_to_deck(id):
        print(rtn[0]['rec'])
        addStudy(deck_id, rtn[0]['rec'].id)
         
-   return render_template('add_word_to_deck.html', msg=msg, deck=deck, deckKind=deckKind)
+   return render_template('add_word_to_deck.html', msg=msg, deck=deck, deckKind=deckKind, kind=kind)
 @app.route('/study-config/<int:id>', methods=['GET', 'POST'])
 @login_required
 def study_config(id):
