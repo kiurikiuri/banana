@@ -847,6 +847,7 @@ def addWordToDeck(deck_id, word, discription, kind_id):
         rtn =[]
         rslt = addWord(word, discription, kind_id)
         rtn.append(rslt)
+        deckRecord = Decks.query.get(deck_id)
         if rtn[0]['result'] == FAILER:
             print('add exist word to deck')
             newWord = Words.query.filter(Words.user_id == current_user.id).filter(Words.word == word).filter(Words.kind_id == kind_id).first()
@@ -855,13 +856,11 @@ def addWordToDeck(deck_id, word, discription, kind_id):
             print('add new word to deck')
             newWord = rtn[0]['rec']
         print(newWord)
-        deckRecord = Decks.query.get(deck_id)
+        # デックに新規追加ワードが登録されているか確認する
         if Wdindk.query.filter(Wdindk.deck_id == deck_id).filter(Wdindk.word_id == newWord.id).first() == None:
+            print("デックに新しく単語を追加[word_id={}]".format(word_id))
             rslt = addWordInDeck(deckRecord, [newWord.id])
             rtn.append(rslt)
-        print(rtn)
-        for li in rtn:
-            print(li)
         return rtn
     except:
         msg="DBアクセスエラー。"
