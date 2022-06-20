@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% include "header.html" %}
+{% include "alerts.html" %}
+{% block content %}
+<div class="container">
+  <h1>LOAD CSV</h1>
+  <!-- <form method="post" acriotn="/create-deck-at-csv" enctype="multipart/form-data"> -->
+  <form method="post">
+    <input type="hidden" name="postjson" id="postjson" />
+    <div class="mb-3">
+      <label for="csv_file" class="form-label">CSV UPLOAD</label>
+      <input type="file" id="csv_file" class="form-control" placeholder="File upload" name="csvfile"/>
+    </div>
+    <button type="submit" class="btn btn-primary" id="submit">Submit</button>
+  </form>
+</div>
+{% include "formvalidate.html" %}
+{% endblock %}
