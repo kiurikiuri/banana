@@ -2,12 +2,12 @@ let fileInput = document.getElementById('csv_file');
 let submitbtn = document.getElementById('submit');
 let message = document.getElementById('message');
 let fileReader = new FileReader();
-let addtype = '';
+// let addtype = '';
 
 // ファイル変更時イベント
 submitbtn.onclick = () => {
-  addtype = $(submitbtn).data('addtype');
-  console.log(addtype);
+  // addtype = $(submitbtn).data('addtype');
+  // console.log(addtype);
   let file = fileInput.files[0];
   fileReader.readAsText(file, "Shift_JIS");
 };
@@ -29,50 +29,57 @@ fileReader.onload = () => {
   items = fileResult.map(item => {
     let datas = item.split(',');
     let result = {};
+    console.log(header)
     for (const index in datas) {
       let key = header[index];
-      result[key] = datas[index];
+      console.log(key)
+      result[key] = datas[index].replace(/\"/g,"");
+      console.log(datas[index]);
     }
     return result;
   });
 
-//let jsondata = JSON.stringify(fileResult);
+  //let jsondata = JSON.stringify(fileResult);
 
-if ($('#my_form').hasClass('new_deck_form')){
-  console.log(items);
-  items.push({'deck_name' : $('#deck_name').val() });
-  console.log(items);
-}
+  // if ($('#my_form').hasClass('new_deck_form')){
+  //   console.log(items);
+  //   items.push({'deck_name' : $('#deck_name').val() });
+  //   console.log(items);
+  // }
 
-let jsondata = JSON.stringify(items);
-console.log(jsondata);
-    $.ajax({
-        url: '/readcsv/'+addtype,
-        type: 'post',
-        data: jsondata,
-        dataType: "json"
-    }).done(function(data){
-    	console.log(data);
-    	let rtn = JSON.parse(data.values);
-      let alertclass = "alertbar-" + Math.random().toString(32).substring(2);
-      let newalert = $(".alertbar_tmp").clone(true).removeClass('alertbar_tmp').addClass(alertclass);
-      $(newalert).appendTo($("body"));
-      $(newalert).find("strong").text(rtn.title);
-      $(newalert).find("p").text(rtn.message);
-      $(newalert).show();
-    }).fail(function(data){
-      console.log(data);
-      let alertclass = "alertbar-" + Math.random().toString(32).substring(2);
-      let newalert = $(".alertbar_tmp").clone(true).removeClass('alertbar_tmp alert-success').addClass(alertclass + ' alert-danger');
-      $(newalert).appendTo($("body"));
-      $(newalert).find("strong").text(data.statusText);
-      $(newalert).find("p").text("failed");
-      $(newalert).show();
-    });
-  
-
-
-  return;
+  let jsondata = JSON.stringify(items);
+  let sndjson = $('#postjson');
+  $(sndjson).val(jsondata);
+  console.log(jsondata);
+  $.ajax({
+      url: '/create-deck-at-csv-post',
+      type: 'POST',
+      dataType: 'json',
+      data: jsondata,
+      headers: {
+       "Content-Type": "application/json",
+     },
+  }).done(function(data){
+    console.log("done");
+    window.alert('done');
+    window.alert(data);
+    // let rtn = JSON.parse(data.values);
+    // let alertclass = "alertbar-" + Math.random().toString(32).substring(2);
+    // let newalert = $(".alertbar_tmp").clone(true).removeClass('alertbar_tmp').addClass(alertclass);
+    // $(newalert).appendTo($("body"));
+    // $(newalert).find("strong").text(rtn.title);
+    // $(newalert).find("p").text(rtn.message);
+    // $(newalert).show();
+  }).fail(function(){
+    console.log("fail")
+    window.alert('fail')
+    // let alertclass = "alertbar-" + Math.random().toString(32).substring(2);
+    // let newalert = $(".alertbar_tmp").clone(true).removeClass('alertbar_tmp alert-success').addClass(alertclass + ' alert-danger');
+    // $(newalert).appendTo($("body"));
+    // $(newalert).find("strong").text(data.statusText);
+    // $(newalert).find("p").text("failed");
+    // $(newalert).show();
+  });
 }
 // ファイル読み取り失敗時
 fileReader.onerror = () => {

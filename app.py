@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, make_response, jsonify
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from flask import render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import pytz
+import werkzeug
 
 
 
@@ -28,6 +29,7 @@ DB_NAME = 'gf291wo421za8xew'
 # ----------------------------------------
 SUCCESS=1
 FAILER=0
+UPLOAD_DIR = "./data/loadcsv/"
 
 # ----------------------------------------
 # Application Define
@@ -37,6 +39,8 @@ STUDY_KIND_FORGET=1
 # Flask settings
 # ----------------------------------------
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
+app.config['JSON_AS_ASCII'] = False
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://{user}:{password}@{host}/{db_name}?charset=utf8'.format(**{
       'user': DB_USER,
@@ -72,7 +76,9 @@ SQL_STUDY_FORGET_INFO = ' \
         e.discription as discription, \
         g.id as study_forget_id,       \
         g.ans_num as ans_num,   \
-        g.next_date as next_date   \
+        g.next_date as next_date,   \
+        h.id as kind_id,  \
+        h.kind as kind   \
     from  \
         study as a  \
     inner join  \
@@ -98,6 +104,9 @@ SQL_STUDY_FORGET_INFO = ' \
         studyforget as g  \
             on f.id = g.wdindk_id \
             and g.deck_id = b.id \
+    inner join  \
+        kind as h  \
+            on e.kind_id = h.id \
 '
 # ----------------------------------------
 # create table class
@@ -388,6 +397,10 @@ def deleteWordsAtIdList(idList):
 def deleteDecksAtIdList(idList):
     for i in idList:
         decks = Decks.query.get(i)
+        Study.query.filter(Study.deck_id==i).delete()
+        StudyForget.query.filter(StudyForget.deck_id==i).delete()
+        Dwsts.query.filter(Dwsts.deck_id==i).delete()
+        Wdindk.query.filter(Wdindk.deck_id==i).delete()
         db.session.delete(decks)
         db.session.commit()
     return 1
@@ -582,6 +595,7 @@ def deck_list():
             arr = request.form.get('deleteItems').split(',')
             ret = deleteDecksAtIdList(arr)
             deckKindList = selectAtUserDeckKind(current_user.id)
+            deckList = selectAtUserDecks(current_user.id)
         else:
             sql = dynamicSqlStcDeckAtUser(current_user.id)
             if not request.form.get('searchdeck') is None:
@@ -797,7 +811,7 @@ def create_word():
         disc = request.form.get('discription')
         kind_id = request.form.get('kind_id')
         result = addWord(word, disc, kind_id)
-        msg = result['msg']
+        msg = result['addWord']['msg']
     return render_template('create_word.html', msg=msg, kindList=kindList)
 
 @app.route('/create-deck-kind', methods=['GET', 'POST'])
@@ -816,9 +830,6 @@ def create_deck_kind():
         else:
             msg="The Deck kind is already exists.[deck_kind='{}']".format(deck_kind)
     return render_template('create_deck_kind.html', msg=msg)
-
-
-    
 
 @app.route('/create-deck', methods=['GET', 'POST'])
 @login_required
@@ -946,3 +957,156 @@ def study_config(id):
             db.session.commit()
    return render_template('study_config.html', msg=msg, studyKindList=studyKindList)
 
+@app.route('/create-deck-at-csv-post', methods=['GET', 'POST'])
+@login_required
+def create_deck_at_csv_post():
+    rtnjson = { "result": "failure", "code": "-1" }
+    if request.method == 'POST':
+        try:
+            req = request.get_json()
+            for rec in req:
+                deck        = rec["deck"]
+                deck_kind   = rec["deck_kind"]
+                # study_kind  = rec["study_kind"]
+                word        = rec["word"]
+                kind        = rec["word_kind"]
+                discription = rec["discription"]
+                print(deck       )
+                print(deck_kind  )
+                # print(study_kind )
+                print(word       )
+                print(kind       )
+                print(discription)
+
+                #deck_kindが登録されているかを確認
+                sql = Dkkind.query.filter(Dkkind.user_id == current_user.id).filter(Dkkind.deck_kind == deck_kind)
+                if not db.session.query(sql.exists()).scalar():
+                    print(1)
+                    # 登録されていなかったので登録
+                    newDkkind = Dkkind(user_id=current_user.id, deck_kind=deck_kind)
+                    db.session.add(newDkkind)
+                    db.session.flush()
+                    deck_kind_id = newDkkind.id
+                else:
+                    print(2)
+                    deck_kind_id = sql.first().id
+
+                #kindが登録されているかを確認
+                sql = Kind.query.filter(Kind.user_id == current_user.id).filter(Kind.kind == kind)
+                print(3)
+                if not db.session.query(sql.exists()).scalar():
+                    print(4)
+                    # 登録されていなかったので登録
+                    newkind = Kind(user_id=current_user.id, kind=kind)
+                    db.session.add(newkind)
+                    db.session.flush()
+                    kind_id = newkind.id
+                else:
+                    print(5)
+                    kind_id = sql.first().id
+
+                #wordとkindの組み合わせが登録されているかを確認
+                sql = Words.query.filter(Words.user_id == current_user.id).filter(Words.word == word).filter(Words.kind_id == kind_id)
+                print(33)
+                if not db.session.query(sql.exists()).scalar():
+                    print(1114)
+                    # 登録されていなかったので登録
+                    newWord = Words(user_id=current_user.id, word=word, discription=discription, kind_id=kind_id)
+                    db.session.add(newWord)
+                    db.session.flush()
+                    word_id = newWord.id
+                else:
+                    print(5)
+                    word_id = sql.first().id
+
+                # deckとdeck_kindの組み合わせが登録されているか確認
+                sql = Decks.query.filter(Decks.user_id == current_user.id).filter(Decks.deck == deck).filter(Decks.deck_kind_id == deck_kind_id)
+                if not db.session.query(sql.exists()).scalar():
+                    print(44)
+                    # 登録されていなかったので登録
+                    newDeck = Decks(user_id=current_user.id, deck_kind_id=deck_kind_id, deck=deck)
+                    db.session.add(newDeck)
+                    db.session.flush()
+                    deck_id = newDeck.id
+                else:
+                    # 登録されているので登録済みのdeck_idを設定
+                    print(55)
+                    deck_id = sql.first().id
+
+                # wdindkが登録されているか確認
+                sql = Wdindk.query.filter(Wdindk.user_id == current_user.id).filter(Wdindk.deck_id == deck_id).filter(Wdindk.word_id == word_id)
+                if not db.session.query(sql.exists()).scalar():
+                    print(451)
+                    # 登録されていなかったので登録
+                    newWdindk = Wdindk(user_id=current_user.id, deck_id=deck_id, word_id=word_id)
+                    db.session.add(newWdindk)
+                    db.session.flush()
+                    wdindk_id = newWdindk.id
+                else:
+                    # 登録されているので登録済みのdeck_idを設定
+                    print(56)
+                    wdindk_id = sql.first().id
+
+                # dwstsが登録されているか確認
+                sql = Dwsts.query.filter(Dwsts.user_id == current_user.id).filter(Dwsts.deck_id == deck_id).filter(Dwsts.word_id == word_id)
+                if not db.session.query(sql.exists()).scalar():
+                    print(452)
+                    # 登録されていなかったので登録
+                    newDwsts = Dwsts(user_id=current_user.id, deck_id=deck_id, word_id=word_id)
+                    db.session.add(newDwsts)
+                    db.session.flush()
+                    dwsts_id = newDwsts.id
+                else:
+                    # 登録されているので登録済みのdeck_idを設定
+                    print(5611)
+                    dwsts_id = sql.first().id
+
+                # studyとdeck_idの組み合わせが登録されているか確認
+                sql = Study.query.filter(Study.deck_id == deck_id)
+                if not db.session.query(sql.exists()).scalar():
+                    print(45)
+                    # 登録されていなかったので登録
+                    newStudy = Study(study_kind_id=1, deck_id=deck_id)
+                    db.session.add(newStudy)
+                    db.session.flush()
+                    study_id = newStudy.id
+                else:
+                    # 登録されているので登録済みのdeck_idを設定
+                    print(56)
+                    study_id = sql.first().id
+                
+                # studyForgetとdeck_idの組み合わせが登録されているか確認
+                sql = StudyForget.query.filter(StudyForget.deck_id == deck_id).filter(StudyForget.wdindk_id == wdindk_id)
+                if not db.session.query(sql.exists()).scalar():
+                    print(4116)
+                    # 登録されていなかったので登録
+                    newStudyForget = StudyForget(wdindk_id=wdindk_id, deck_id=deck_id, ans_num=0)
+                    db.session.add(newStudyForget)
+                    db.session.flush()
+                    study_id = newStudyForget.id
+                else:
+                    # 登録されているので登録済みのdeck_idを設定
+                    print(57)
+                    study_id = sql.first().id
+                print(6)
+            db.session.commit()
+            rtnjson = { "result": "success", "code": "1" }
+        except Exception as e:
+            print(e)
+            db.session.rollback()
+            rtnjson = { "result": "failure", "code": "-1" }
+        finally:
+            return jsonify(rtnjson)
+
+@app.route('/create-deck-at-csv', methods=['GET', 'POST'])
+@login_required
+def create_deck_at_csv():
+    # DBに登録されたデータをすべて取得する
+    msg='initialize'
+    if request.method == 'POST':
+        print(1)
+        # req = request.get_json()
+        # for li in request.json:
+        #     li.get("deck")
+
+    return render_template('create_deck_at_csv.html', msg=msg)
