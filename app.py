@@ -234,18 +234,19 @@ def load_user(user_id):
 # ----------------------------------------
 # signup user
 # ----------------------------------------
-# @app.route('/signup', methods=['GET', 'POST'])
-# def signup():
-#     if request.method == "POST":
-#         username = request.form.get('username')
-#         password = request.form.get('password')
-#         # Userのインスタンスを作成
-#         user = User(username=username, password=generate_password_hash(password, method='sha256'))
-#         db.session.add(user)
-#         db.session.commit()
-#         return redirect('/login')
-#     else:
-#         return render_template('signup.html')
+@app.route('/signup', methods=['GET', 'POST'])
+@login_required
+def signup():
+    if request.method == "POST":
+        username = request.form.get('username')
+        password = request.form.get('password')
+        # Userのインスタンスを作成
+        user = User(username=username, password=generate_password_hash(password, method='sha256'))
+        db.session.add(user)
+        db.session.commit()
+        return redirect('/login')
+    else:
+        return render_template('signup.html')
 
 # ----------------------------------------
 # login
@@ -533,13 +534,8 @@ def addStudy(deck_id, word_id):
 @app.route('/', methods=['GET'])
 @login_required
 def index():
-    print(current_user.id)
-    return render_template('index.html' )
+    return redirect('/deck-list') 
 
-@app.route('/load-csv')
-@login_required
-def load_csv():
-   return render_template('load_csv.html' )
 
 # ----------------------------------------
 # select data template
