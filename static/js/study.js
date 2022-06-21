@@ -17,15 +17,8 @@ $("#incorrect-btn").on('click', function(){
 })
 
 
-let isUrl = $('#correct-answer').text()
-AutoLink(isUrl);
-function AutoLink(str) {
-    var regexp_url = /((h?)(ttps?:\/\/[a-zA-Z0-9.\-_@:/~?%&;=+#',()*!]+))/g; // ']))/;
-    var regexp_makeLink = function(all, url, h, href) {
-        return '<a href="h' + href + '">' + url + '</a>';
-    }
- 
-    return str.replace(regexp_url, regexp_makeLink);
-}
-
-
+$(function(){
+    $('.js-autolink').each(function(){
+        $(this).html($(this).html().replace(/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig,"<a href='$1'>$1</a>"));
+    });
+});
