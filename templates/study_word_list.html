@@ -23,7 +23,19 @@
     <!--   </div> -->
     <!--  -->
     <!-- </div> -->
-    <a type="button" class="btn btn-primary" href="/add-word-to-deck/{{ deckInfoList[0]['deck_id'] }}/{{ deckInfoList[0]['word_id'] }}">Add Word</a>
+
+    <div class="row">
+      <div class="col-3">
+        <a type="button" class="btn btn-primary" href="/add-word-to-deck/{{ deckInfoList[0]['deck_id'] }}/{{ deckInfoList[0]['word_id'] }}">Add Word</a>
+      </div>
+      <div class="col-3">
+      </div>
+      <div class="col-3">
+      </div>
+      <div class="col-3">
+        <strong>today works: {{ len(todayworks) }}</strong>
+      </div>
+    </div>
         <div class="row">
         <div class="accordion" id="accordion_word">
       {% for li in deckInfoList %}
@@ -31,11 +43,11 @@
             <h2 class="accordion-header" id="header_word_{{ li.word_id }}">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#word_{{ li.word_id }}" aria-expanded="false" aria-controls="collapseOne">
                 {{ li.word }}
-              </button>
+              </button><strong>next: {{ li.next_date }}</strong><code>{{ li.ans_num }}</code>
             </h2>
             <div id="word_{{ li.word_id }}" class="accordion-collapse collapse" aria-labelledby="header_word_{{ li.word_id }}" data-bs-parent="#accordion_word">
               <div class="accordion-body">
-                <strong>next: {{ li.next_date }}</strong>{{ li.disctiption }}<code>{{ li.ans_num }}</code>
+                {{ li.discription }}
               </div>
             </div>
           </div>
