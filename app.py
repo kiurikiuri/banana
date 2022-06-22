@@ -611,10 +611,10 @@ def study_list(id):
             ;'.format(current_user.id, id)
     t = db.text(sql)
     deckInfoList = db.session.execute(t).all()
-
     now = datetime.now()
     tommorow = now + timedelta(days=1)
     tommorowStr = tommorow.strftime('%Y/%m/%d 00:00:00')
+    print(tommorowStr)
     sql = SQL_STUDY_FORGET_INFO + ' \
             where  b.user_id = {} \
             and    a.deck_id = {} \
@@ -623,6 +623,7 @@ def study_list(id):
             ;'.format(current_user.id, id, tommorowStr)
     t = db.text(sql)
     todayworks = db.session.execute(t).all()
+    print(todayworks)
     if request.method == 'POST':
         print(1)
     return render_template('study_word_list.html', deckInfoList = deckInfoList, todayworks = todayworks)
