@@ -41,8 +41,8 @@
       {% for li in deckInfoList %}
           <div class="accordion-item">
             <h2 class="accordion-header" id="header_word_{{ li.word_id }}">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#word_{{ li.word_id }}" aria-expanded="false" aria-controls="collapseOne">
-                {{ li.word }} | <span class="float-end"><strong>next: {{ li.next_date }}</strong><span class="badge bg-secondary">{{ li.ans_num }}</span></span>
+              <button class="accordion-button collapsed row" type="button" data-bs-toggle="collapse" data-bs-target="#word_{{ li.word_id }}" aria-expanded="false" aria-controls="collapseOne">
+                <span class="col-8">{{ li.word }}</span><span class="col-4"><strong>next: {{ li.next_date }}</strong><span class="badge bg-secondary">{{ li.ans_num }}</span></span>
               </button>
             </h2>
             <div id="word_{{ li.word_id }}" class="accordion-collapse collapse" aria-labelledby="header_word_{{ li.word_id }}" data-bs-parent="#accordion_word">
